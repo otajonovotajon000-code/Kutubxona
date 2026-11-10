@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kutubxonam</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --primary: #18392F;
+      --primary-light: #245243;
+      --accent: #C5A46D;
+      --bg: #F7F4EC;
+      --card: #FFFFFF;
+      --text: #24342D;
+      --muted: #64748b;
+      --success: #16a34a;
+      --warning: #ca8a04;
+      --danger: #dc2626;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 110px; }
+
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      padding: 20px 16px;
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
+      box-shadow: 0 4px 15px rgba(24, 57, 47, 0.2);
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .header-top h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .user-pill {
+      background: rgba(197, 164, 109, 0.2);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .viewing-banner {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 8px 12px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+    .viewing-banner.active { display: flex; }
+    .back-my-btn {
+      background: var(--accent);
+      color: var(--primary);
+      border: none;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(197, 164, 109, 0.3);
+      backdrop-filter: blur(8px);
+      padding: 10px;
+      border-radius: 14px;
+      text-align: center;
+    }
+    .stat-card span { display: block; font-size: 11px; opacity: 0.85; margin-bottom: 4px; }
+    .stat-card strong { font-size: 15px; font-weight: 700; color: var(--accent); }
+
+    .main-nav {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 14px 16px 4px;
+    }
+    .nav-btn {
+      padding: 11px;
+      border-radius: 14px;
+      border: 1px solid rgba(24, 57, 47, 0.15);
+      background: var(--card);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .nav-btn.active {
+      background: var(--primary);
+      color: var(--accent);
+      border-color: var(--primary);
+    }
+
+    .community-header { padding: 12px 16px 0; }
+    .search-box {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      font-size: 14px;
+      background: var(--card);
+      margin-bottom: 8px;
+    }
+    .community-counter { font-size: 12px; color: var(--muted); font-weight: 600; padding-left: 4px; }
+
+    .tabs { display: flex; gap: 8px; padding: 12px 16px 8px; overflow-x: auto; }
+    .tab {
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: #e6e2d8;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab.active { background: var(--primary); color: var(--accent); }
+
+    .book-list, .users-list { padding: 8px 16px; display: flex; flex-direction: column; gap: 12px; }
+    .book-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      gap: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      cursor: pointer;
+      border: 1px solid rgba(0,0,0,0.03);
+    }
+    .book-cover {
+      width: 64px;
+      height: 92px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: bold;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .book-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .book-info { flex: 1; min-width: 0; }
+    .book-title { font-size: 16px; font-weight: 700; margin-bottom: 2px; color: var(--text); }
+    .book-author { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .book-price { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+    
+    .badge-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      user-select: none;
+    }
+    .badge.read { background: #dcfce7; color: var(--success); }
+    .badge.unread { background: #fef9c3; color: var(--warning); }
+    .edit-hint { font-size: 11px; color: var(--muted); opacity: 0.8; }
+
+    .dates {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed #e2e8f0;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .user-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      cursor: pointer;
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+    .user-card-left { display: flex; align-items: center; gap: 12px; }
+    .user-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    .user-name { font-size: 15px; font-weight: 700; color: var(--text); }
+    .user-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .user-card-right { text-align: right; }
+    .user-val { font-size: 13px; font-weight: 700; color: var(--primary); }
+    .user-arrow { font-size: 12px; color: var(--accent); font-weight: 600; margin-top: 3px; }
+
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--primary);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 28px;
+      padding: 14px 22px;
+      font-size: 15px;
+      font-weight: 600;
+      box-shadow: 0 6px 20px rgba(24, 57, 47, 0.35);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 50;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+      overflow-y: auto;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--card);
+      width: 100%;
+      max-width: 420px;
+      border-radius: 20px;
+      padding: 20px;
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .modal-header h2 { font-size: 18px; color: var(--primary); }
+    .close-x { background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer; }
+
+    .image-upload-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+      padding: 10px;
+      background: var(--bg);
+      border-radius: 12px;
+    }
+    .image-preview {
+      width: 56px;
+      height: 80px;
+      border-radius: 8px;
+      background: var(--primary);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: bold;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .upload-btn {
+      display: inline-block;
+      padding: 7px 12px;
+      background: var(--primary);
+      color: white;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 4px;
+    }
+    .remove-img-btn {
+      background: none;
+      border: none;
+      color: var(--danger);
+      font-size: 11px;
+      cursor: pointer;
+      display: block;
+    }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 14px;
+      background: #fff;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+    .btn { flex: 1; padding: 11px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; font-size: 14px; }
+    .btn-cancel { background: #e2e8f0; color: var(--text); }
+    .btn-save { background: var(--primary); color: var(--accent); }
+    .btn-delete { background: #fee2e2; color: var(--danger); flex: 0.6; }
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-top">
+      <h1 id="headerTitle">📚 Kutubxonam</h1>
+      <div class="user-pill" id="currentUserBadge">👤 Aniqlanmoqda...</div>
+    </div>
+
+    <div class="viewing-banner" id="viewingBanner">
+      <span id="viewingText">Siz boshqa kitobxon javonini ko'ryapsiz</span>
+      <button class="back-my-btn" onclick="switchToMyShelf()">O'z javonimga qaytish</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span>Jami kitob</span>
+        <strong id="totalCount">0 ta</strong>
+      </div>
+      <div class="stat-card">
+        <span>O'qilgan</span>
+        <strong id="readCount">0 ta</strong>
+      </div>
+      <div class="stat-card">
+        <span>Umumiy qiymat</span>
+        <strong id="totalPrice">0 so'm</strong>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-nav">
+    <button class="nav-btn active" id="navMyShelf" onclick="switchSection('shelf')">📖 Kitob javoni</button>
+    <button class="nav-btn" id="navCommunity" onclick="switchSection('community')">👥 Kitobxonlar</button>
+  </div>
+
+  <div id="shelfSection">
+    <div class="tabs">
+      <button class="tab active" onclick="setFilter('all', this)">Barchasi</button>
+      <button class="tab" onclick="setFilter('read', this)">O'qilganlar</button>
+      <button class="tab" onclick="setFilter('unread', this)">O'qilmaganlar</button>
+    </div>
+    <div class="book-list" id="bookList"></div>
+  </div>
+
+  <div id="communitySection" style="display:none;">
+    <div class="community-header">
+      <input type="text" class="search-box" id="userSearchInput" placeholder="🔍 Ism yoki @username bo'yicha qidirish..." oninput="renderCommunity()">
+      <div class="community-counter" id="communityCounter">Jami kitobxonlar: 0 ta</div>
+    </div>
+    <div class="users-list" id="usersList"></div>
+  </div>
+
+  <button class="fab" id="addBookFab" onclick="openAddModal()">+ Kitob qo'shish</button>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Yangi kitob qo'shish</h2>
+        <button class="close-x" onclick="closeModal()">✕</button>
+      </div>
+
+      <div class="image-upload-wrap">
+        <div class="image-preview" id="imagePreview">📷</div>
+        <div class="image-upload-controls">
+          <label class="upload-btn" for="bookImageInput">Muqova rasmini tanlash</label>
+          <input type="file" id="bookImageInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+          <button type="button" class="remove-img-btn" id="removeImgBtn" style="display:none" onclick="removeImage()">Rasmni olib tashlash</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Kitob nomi *</label>
+        <input type="text" id="bookTitle" placeholder="Masalan: O'tkan kunlar">
+      </div>
+      <div class="form-group">
+        <label>Muallif</label>
+        <input type="text" id="bookAuthor" placeholder="Masalan: Abdulla Qodiriy">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Narxi (so'm)</label>
+          <input type="number" id="bookPrice" placeholder="45000">
+        </div>
+        <div class="form-group">
+          <label>Holati</label>
+          <select id="bookStatus">
+            <option value="unread">O'qilmagan</option>
+            <option value="read">O'qilgan</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Boshlangan sana</label>
+          <input type="date" id="startDate">
+        </div>
+        <div class="form-group">
+          <label>Tugatilgan sana</label>
+          <input type="date" id="endDate">
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-delete" id="deleteBtn" style="display:none" onclick="deleteCurrentBook()">O'chirish</button>
+        <button class="btn btn-cancel" onclick="closeModal()">Bekor qilish</button>
+        <button class="btn btn-save" onclick="saveBook()">Saqlash</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+    if (tg) tg.expand();
+
+    let currentUser;
+    const tgUser = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user : null;
+
+    if (tgUser && tgUser.id) {
+      // Telegram orqali kirgan haqiqiy foydalanuvchi
+      currentUser = {
+        id: String(tgUser.id),
+        name: [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || "Kitobxon",
+        username: tgUser.username ? "@" + tgUser.username : "@user_" + tgUser.id
+      };
+    } else {
+      // Brauzerdan test qilayotganda har safar yangi mehmon yaratilmasligi uchun brauzerda doimiy ID saqlaymiz
+      let savedBrowserId = localStorage.getItem('kitab_browser_unique_id');
+      let savedBrowserName = localStorage.getItem('kitab_browser_name');
+      
+      if (!savedBrowserId) {
+        savedBrowserId = "web_" + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('kitab_browser_unique_id', savedBrowserId);
+        savedBrowserName = "Kitobxon " + Math.floor(Math.random() * 900 + 100);
+        localStorage.setItem('kitab_browser_name', savedBrowserName);
+      }
+
+      currentUser = {
+        id: savedBrowserId,
+        name: savedBrowserName,
+        username: "@browser_user"
+      };
+    }
+
+    document.getElementById('currentUserBadge').innerText = "👤 " + currentUser.name;
+
+    const STORAGE_KEY = 'kitob_users_master_dict_v2';
+    let allUsersData = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+
+    // Agar bu foydalanuvchi bazada bo'lmasa, noldan bo'sh javon bilan qo'shamiz (hech qanday avtomat kitobsiz!)
+    if (!allUsersData[currentUser.id]) {
+      allUsersData[currentUser.id] = {
+        id: currentUser.id,
+        name: currentUser.name,
+        username: currentUser.username,
+        books: [] // Bo'sh javon, hech qanday namuna kitob yo'q!
+      };
+    } else {
+      // Ma'lumotlarini yangilab qo'yamiz
+      allUsersData[currentUser.id].name = currentUser.name;
+      allUsersData[currentUser.id].username = currentUser.username;
+      if (!allUsersData[currentUser.id].books) {
+        allUsersData[currentUser.id].books = [];
+      }
+    }
+
+    let viewedUserId = currentUser.id;
+    let currentFilter = 'all';
+    let editingBookId = null;
+    let currentImageBase64 = "";
+
+    function isMyShelf() {
+      return viewedUserId === currentUser.id;
+    }
+
+    function getActiveBooks() {
+      return allUsersData[viewedUserId] ? allUsersData[viewedUserId].books : [];
+    }
+
+    function setActiveBooks(newBooks) {
+      if (allUsersData[viewedUserId]) {
+        allUsersData[viewedUserId].books = newBooks;
+      }
+    }
+
+    function sortUserBooks(userId) {
+      if (!allUsersData[userId]) return;
+      const list = allUsersData[userId].books || [];
+      const unread = list.filter(b => b.status !== 'read');
+      const read = list.filter(b => b.status === 'read');
+      allUsersData[userId].books = [...unread, ...read];
+    }
+
+    function saveDatabase() {
+      sortUserBooks(viewedUserId);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allUsersData));
+    }
+
+    function renderBooks() {
+      sortUserBooks(viewedUserId);
+      const books = getActiveBooks();
+      const list = document.getElementById('bookList');
+      list.innerHTML = '';
+
+      const banner = document.getElementById('viewingBanner');
+      const fab = document.getElementById('addBookFab');
+      if (isMyShelf()) {
+        banner.classList.remove('active');
+        document.getElementById('headerTitle').innerText = "📚 Kutubxonam";
+        fab.style.display = 'flex';
+      } else {
+        const otherUser = allUsersData[viewedUserId] || { name: "Foydalanuvchi" };
+        banner.classList.add('active');
+        document.getElementById('viewingText').innerText = `👁 ${otherUser.name} javonini ko'ryapsiz`;
+        document.getElementById('headerTitle').innerText = `📚 ${otherUser.name}`;
+        fab.style.display = 'none';
+      }
+
+      const filtered = books.filter(b => currentFilter === 'all' ? true : b.status === currentFilter);
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state">Hozircha bu bo\'limda kitoblar yo\'q</div>';
+      }
+
+      filtered.forEach(book => {
+        const firstLetter = book.title ? book.title.charAt(0).toUpperCase() : 'K';
+        const isRead = book.status === 'read';
+        const coverContent = book.image
+          ? `<img src="${book.image}" alt="${book.title}">`
+          : firstLetter;
+
+        const card = document.createElement('div');
+        card.className = 'book-card';
+        if (isMyShelf()) {
+          card.onclick = () => openEditModal(book.id);
+        }
+        card.innerHTML = `
+          <div class="book-cover">${coverContent}</div>
+          <div class="book-info">
+            <div class="book-title">${book.title}</div>
+            <div class="book-author">${book.author || 'Muallif kiritilmagan'}</div>
+            <div class="book-price">${Number(book.price || 0).toLocaleString('uz-UZ')} so'm</div>
+            <div class="badge-row">
+              <span class="badge ${isRead ? 'read' : 'unread'}" onclick="toggleStatus(event, ${book.id})">
+                ${isRead ? '✓ O\'qilgan' : '⏳ O\'qilmagan'}
+              </span>
+              ${isMyShelf() ? '<span class="edit-hint">✏️ Tahrirlash</span>' : ''}
+            </div>
+            <div class="dates">
+              <span>📅 Boshlandi: <b>${book.startDate || '—'}</b></span>
+              <span>🏁 Tugatildi: <b>${book.endDate || '—'}</b></span>
+            </div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+      document.getElementById('totalCount').innerText = books.length + ' ta';
+      document.getElementById('readCount').innerText = books.filter(b => b.status === 'read').length + ' ta';
+      const totalSum = books.reduce((sum, b) => sum + Number(b.price || 0), 0);
+      document.getElementById('totalPrice').innerText = totalSum.toLocaleString('uz-UZ') + " so'm";
+    }
+
+    function renderCommunity() {
+      const container = document.getElementById('usersList');
+      container.innerHTML = '';
+
+      const searchQuery = document.getElementById('userSearchInput').value.toLowerCase().trim();
+      const usersArray = Object.values(allUsersData);
+
+      const filteredUsers = usersArray.filter(user => {
+        const nameMatch = user.name && user.name.toLowerCase().includes(searchQuery);
+        const usernameMatch = user.username && user.username.toLowerCase().includes(searchQuery);
+        return nameMatch || usernameMatch;
+      });
+
+      document.getElementById('communityCounter').innerText = `Jami kitobxonlar: ${filteredUsers.length} ta`;
+
+      if (filteredUsers.length === 0) {
+        container.innerHTML = '<div class="empty-state">Hech kim topilmadi</div>';
+        return;
+      }
+
+      filteredUsers.forEach(user => {
+        const uBooks = user.books || [];
+        const totalVal = uBooks.reduce((s, b) => s + Number(b.price || 0), 0);
+        const firstLetter = user.name ? user.name.charAt(0).toUpperCase() : 'U';
+        const isMe = user.id === currentUser.id;
+
+        const item = document.createElement('div');
+        item.className = 'user-card';
+        item.onclick = () => viewUserShelf(user.id);
+        item.innerHTML = `
+          <div class="user-card-left">
+            <div class="user-avatar">${firstLetter}</div>
+            <div>
+              <div class="user-name">${user.name} ${isMe ? '(Siz)' : ''}</div>
+              <div class="user-sub">${user.username || ''}  •  📚 ${uBooks.length} ta</div>
+            </div>
+          </div>
+          <div class="user-card-right">
+            <div class="user-val">${totalVal.toLocaleString('uz-UZ')} so'm</div>
+            <div class="user-arrow">Javonni ko'rish →</div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function switchSection(section) {
+      const shelfSec = document.getElementById('shelfSection');
+      const commSec = document.getElementById('communitySection');
+      const navShelf = document.getElementById('navMyShelf');
+      const navComm = document.getElementById('navCommunity');
+      const fab = document.getElementById('addBookFab');
+
+      if (section === 'community') {
+        shelfSec.style.display = 'none';
+        commSec.style.display = 'block';
+        navShelf.classList.remove('active');
+        navComm.classList.add('active');
+        fab.style.display = 'none';
+        renderCommunity();
+      } else {
+        shelfSec.style.display = 'block';
+        commSec.style.display = 'none';
+        navShelf.classList.add('active');
+        navComm.classList.remove('active');
+        renderBooks();
+      }
+    }
+
+    function viewUserShelf(userId) {
+      viewedUserId = userId;
+      switchSection('shelf');
+    }
+
+    function switchToMyShelf() {
+      viewedUserId = currentUser.id;
+      switchSection('shelf');
+    }
+
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      renderBooks();
+    }
+
+    function toggleStatus(event, id) {
+      event.stopPropagation();
+      if (!isMyShelf()) return;
+
+      let books = getActiveBooks();
+      const targetBook = books.find(b => b.id === id);
+      if (!targetBook) return;
+
+      const newStatus = targetBook.status === 'read' ? 'unread' : 'read';
+      const today = new Date().toISOString().split('T')[0];
+      const updatedBook = {
+        ...targetBook,
+        status: newStatus,
+        endDate: newStatus === 'read' && !targetBook.endDate ? today : targetBook.endDate
+      };
+
+      books = books.filter(b => b.id !== id);
+      if (newStatus === 'read') {
+        books.push(updatedBook);
+      } else {
+        books.unshift(updatedBook);
+      }
+
+      setActiveBooks(books);
+      saveDatabase();
+      renderBooks();
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const maxW = 240;
+          const maxH = 340;
+          let w = img.width;
+          let h = img.height;
+
+          if (w > h) {
+            if (w > maxW) { h *= maxW / w; w = maxW; }
+          } else {
+            if (h > maxH) { w *= maxH / h; h = maxH; }
+          }
+
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          currentImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          updateImagePreview();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updateImagePreview() {
+      const preview = document.getElementById('imagePreview');
+      const removeBtn = document.getElementById('removeImgBtn');
+      if (currentImageBase64) {
+        preview.innerHTML = `<img src="${currentImageBase64}" alt="Preview">`;
+        removeBtn.style.display = 'block';
+      } else {
+        preview.innerHTML = '📷';
+        removeBtn.style.display = 'none';
+      }
+    }
+
+    function removeImage() {
+      currentImageBase64 = "";
+      document.getElementById('bookImageInput').value = "";
+      updateImagePreview();
+    }
+
+    function openAddModal() {
+      if (!isMyShelf()) return;
+      editingBookId = null;
+      currentImageBase64 = "";
+      document.getElementById('modalTitle').innerText = "Yangi kitob qo'shish";
+      document.getElementById('bookTitle').value = '';
+      document.getElementById('bookAuthor').value = '';
+      document.getElementById('bookPrice').value = '';
+      document.getElementById('bookStatus').value = 'unread';
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
+      document.getElementById('bookImageInput').value = '';
+      document.getElementById('deleteBtn').style.display = 'none';
+      updateImagePreview();
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function openEditModal(id) {
+      if (!isMyShelf()) return;
+      const books = getActiveBooks();
+      const book = books.find(b => b.id === id);
+      if (!book) return;
+
+      editingBookId = id;
+      currentImageBase64 = book.image || "";
+      document.getElementById('modalTitle').innerText = "Kitobni tahrirlash";
+      document.getElementById('bookTitle').value = book.title || '';
+      document.getElementById('bookAuthor').value = book.author || '';
+      document.getElementById('bookPrice').value = book.price || '';
+      document.getElementById('bookStatus').value = book.status || 'unread';
+      document.getElementById('startDate').value = book.startDate || '';
+      document.getElementById('endDate').value = book.endDate || '';
+      document.getElementById('bookImageInput').value = '';
+      document.getElementById('deleteBtn').style.display = 'block';
+      updateImagePreview();
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    function saveBook() {
+      if (!isMyShelf()) return;
+      const title = document.getElementById('bookTitle').value.trim();
+      const author = document.getElementById('bookAuthor').value.trim();
+      const price = document.getElementById('bookPrice').value;
+      const status = document.getElementById('bookStatus').value;
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+
+      if (!title) {
+        alert("Iltimos, kitob nomini kiriting!");
+        return;
+      }
+
+      let books = getActiveBooks();
+
+      if (editingBookId !== null) {
+        const existingBook = books.find(b => b.id === editingBookId);
+        const statusChangedToRead = existingBook && existingBook.status !== 'read' && status === 'read';
+        const updatedBook = {
+          ...existingBook,
+          title,
+          author,
+          price: Number(price) || 0,
+          status,
+          startDate,
+          endDate,
+          image: currentImageBase64
+        };
+
+        if (statusChangedToRead) {
+          books = books.filter(b => b.id !== editingBookId);
+          books.push(updatedBook);
+        } else {
+          books = books.map(b => b.id === editingBookId ? updatedBook : b);
+        }
+      } else {
+        const newBook = {
+          id: Date.now(),
+          title,
+          author,
+          price: Number(price) || 0,
+          status,
+          startDate,
+          endDate,
+          image: currentImageBase64
+        };
+        if (status === 'read') {
+          books.push(newBook);
+        } else {
+          books.unshift(newBook);
+        }
+      }
+
+      setActiveBooks(books);
+      saveDatabase();
+      renderBooks();
+      closeModal();
+    }
+
+    function deleteCurrentBook() {
+      if (!isMyShelf() || editingBookId === null) return;
+      if (confirm("Bu kitobni butunlay o'chirmoqchimisiz?")) {
+        const books = getActiveBooks().git ? getActiveBooks() : getActiveBooks().filter(b => b.id !== editingBookId);
+        setActiveBooks(books);
+        saveDatabase();
+        renderBooks();
+        closeModal();
+      }
+    }
+
+    saveDatabase();
+    renderBooks();
+  </script>
+</body>
+</html>
